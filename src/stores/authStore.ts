@@ -1,9 +1,6 @@
-/**
- * Authentication state management store
- * - Fix: Align mock user with User type (name instead of firstName/lastName).
- */
 import { create } from 'zustand';
-import type { User } from '../types';
+import { User } from '../types';
+import { getSupabaseClient } from '../config/supabaseConfig';
 
 interface AuthState {
   user: User | null;
@@ -13,54 +10,44 @@ interface AuthState {
   register: (userData: Partial<User>) => Promise<boolean>;
 }
 
+const supabase = getSupabaseClient();
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
 
-  /**
-   * User login function
-   */
-  login: async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+  login: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    // Mock authentication logic - check for demo credentials
-    if (email === 'duanejones5@gmail.com' && password === 'Pharmacy1') {
-      const mockUser: User = {
-        id: '1',
-        email: 'duanejones5@gmail.com',
-        name: 'Duane',
-        role: 'member',
-        subscription: {
-          id: 'sub1',
-          planName: 'Premium',
-          status: 'active',
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-          programs: ['mtm-future-today', 'timemymeds', 'test-treat'],
-        },
-        createdAt: new Date(),
-      };
-
-      set({ user: mockUser, isAuthenticated: true });
-      return true;
+    if (error || !data.user) {
+      console.error('Error logging in:', error?.message);
+      return false;
     }
-    return false;
+
+    const user: User = {
+      id: data.user.id,
+      email: data.user.email ?? '',
+      name: data.user.user_metadata.name ?? 'Member',
+      role: 'member',
+      createdAt: new Date(data.user.created_at),
+    };
+
+    set({ user, isAuthenticated: true });
+    return true;
   },
 
-  /**
-   * User logout function
-   */
-  logout: () => {
+  logout: async () => {
+    await supabase.auth.signOut();
     set({ user: null, isAuthenticated: false });
   },
 
-  /**
-   * User registration function
-   */
-  register: async (_userData: Partial<User>) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
+  register: async (userData) => {
+    // This is a placeholder for a registration function.
+    // You would typically call supabase.auth.signUp here.
+    console.log('Registering user:', userData);
     return true;
   },
 }));
