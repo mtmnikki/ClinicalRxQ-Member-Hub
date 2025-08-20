@@ -24,7 +24,7 @@ interface AppShellProps {
  * Fixed-width left rail used for both the aside and main area offset.
  * Reduced slightly to increase the working canvas.
  */
-const SIDEBAR_WIDTH_PX = 200;
+const SIDEBAR_WIDTH_PX = 300;
 
 // Supabase client initialization should be handled globally or in a dedicated service/context.
 // For demonstration purposes, if you need to access it here, ensure it's imported or passed down.
@@ -39,7 +39,7 @@ export default function AppShell({ sidebar, header, children }: AppShellProps) {
       {/* Fixed left sidebar */}
       {sidebar ? (
         <aside
-          className="fixed inset-y-0 left-0 z-40 w-[200px] border-r border-slate-200 bg-slate-900"
+          className="fixed inset-y-0 left-0 z-40 w-[300px] border-r border-slate-200 bg-slate-900"
           aria-label="Primary member navigation"
         >
           {/* Inner scroll area for long menus while keeping the frame static */}
