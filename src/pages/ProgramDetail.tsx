@@ -159,8 +159,8 @@ export default function ProgramDetail() {
   return (
     <AppShell sidebar={<MemberSidebar />}>
       {/* Gradient hero with glass container */}
-      <section className="relative -mx-3 bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-300 px-3 py-10 text-white">
-        <div className="mx-auto w-full max-w-[1440px]">
+      <section className="relative -mx-3 bg-gradient-to-br from-blue-700 via-cyan-500 to-teal-400 px-3 py-10 text-white">
+        <div className="mx-auto w-full max-w-[1600px]">
           <div className="max-w-4xl">
             <Breadcrumbs
               variant="light"
@@ -173,7 +173,7 @@ export default function ProgramDetail() {
             />
 
             {/* Glassmorphism container */}
-            <div className="rounded-xl border border-white/25 bg-white/10 p-6 shadow-lg backdrop-blur-md">
+            <div className="rounded-xl border border-white/25 bg-white/10 p-8 shadow-lg backdrop-blur-md align-center">
               <h1 className="text-3xl font-bold leading-tight">
                 <SafeText value={name} />
               </h1>
