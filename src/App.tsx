@@ -1,8 +1,4 @@
-/**
- * Main application component with routing
- * - Purged Airtable: removed DevAirtableBootstrap and any Airtable-related bootstraps.
- * - Keeps global ErrorBoundary, Toaster, ScrollToTop, BackToTop.
- */
+
 
 import { BrowserRouter, Route, Routes } from 'react-router';
 import Home from './pages/Home';
@@ -21,6 +17,34 @@ import { Toaster } from 'sonner';
 import ScrollToTop from './components/common/ScrollToTop';
 import BackToTop from './components/common/BackToTop';
 import { AuthProvider } from './components/auth/AuthContext';
+
+import { useState, useEffect } from 'react'
+import { supabase } from '../utils/supabase'
+
+function Page() {
+  const [todos, setTodos] = useState([])
+
+  useEffect(() => {
+    function getTodos() {
+      const { data: todos } = await supabase.from('todos').select()
+
+      if (todos.length > 1) {
+        setTodos(todos)
+      }
+    }
+
+    getTodos()
+  }, [])
+
+  return (
+    <div>
+      {todos.map((todo) => (
+        <li key={todo}>{todo}</li>
+      ))}
+    </div>
+  )
+}
+export default Page
 
 /**
  * Protected route component for member-only pages
