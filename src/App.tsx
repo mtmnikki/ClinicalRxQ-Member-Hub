@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
 import Home from './pages/Home';
-import LearnMore from './pages/learnmore';
+import LearnMore from './pages/LearnMore';
 import Login from './pages/Login';
 import Enroll from './pages/Enroll';
 import Dashboard from './pages/Dashboard';
