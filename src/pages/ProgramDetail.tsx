@@ -202,7 +202,7 @@ export default function ProgramDetail() {
               ) : null}
             </div>
           </div>
-        </div>
+
       </section>
 
       {/* Loading or error */}
