@@ -169,11 +169,12 @@ export default function ProgramDetail() {
       <section className="relative -mx-3 bg-gradient-to-br from-blue-700 via-cyan-500 to-teal-300 px-3 py-10 text-white">
         {/* Remove max-width constraint to achieve full width between sidebar and viewport edge */}
         <div className="w-full">
+          <div className="max-w-4xl">
             <Breadcrumbs
               variant="light"
               items={[
                 { label: 'Dashboard', to: '/dashboard' },
-                { label: 'Clinical Programs', to: '/clinicalprograms' },
+                { label: 'Clinical Programs', to: '/member-content' },
                 { label: name || 'Program' },
               ]}
               className="mb-4"
@@ -202,7 +203,7 @@ export default function ProgramDetail() {
               ) : null}
             </div>
           </div>
-
+        </div>
       </section>
 
       {/* Loading or error */}
