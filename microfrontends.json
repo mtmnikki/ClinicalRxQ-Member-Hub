@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "clinical-rx-q-member-hub": {
+      "development": {
+        "fallback": "clinical-rx-q.vercel.app"
+      }
+    }
+  }
+}
