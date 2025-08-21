@@ -37,78 +37,70 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <ErrorBoundary>
-        <Routes>
-          {/* Public Routes - NO AuthProvider */}
-          <Route path="/" element={<Home />} />
-          <Route path="/learnmore" element={<LearnMore />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/enroll" element={<Enroll />} />
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/learnmore" element={<LearnMore />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/enroll" element={<Enroll />} />
 
-          {/* Protected Routes - WITH AuthProvider */}
-          <Route
-            path="/dashboard"
-            element={
-              <AuthProvider>
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-          <Route
-            path="/member-content"
-            element={
-              <AuthProvider>
+              }
+            />
+            <Route
+              path="/member-content"
+              element={
                 <ProtectedRoute>
                   <MemberContent />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-          <Route
-            path="/resources"
-            element={
-              <AuthProvider>
+              }
+            />
+            <Route
+              path="/resources"
+              element={
                 <ProtectedRoute>
                   <Resources />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-          <Route
-            path="/program/:programSlug"
-            element={
-              <AuthProvider>
+              }
+            />
+            <Route
+              path="/program/:programSlug"
+              element={
                 <ProtectedRoute>
                   <ProgramDetail />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-          <Route
-            path="/account"
-            element={
-              <AuthProvider>
+              }
+            />
+            <Route
+              path="/account"
+              element={
                 <ProtectedRoute>
                   <Account />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-          <Route
-            path="/bookmarks"
-            element={
-              <AuthProvider>
+              }
+            />
+            <Route
+              path="/bookmarks"
+              element={
                 <ProtectedRoute>
                   <Bookmarks />
                 </ProtectedRoute>
-              </AuthProvider>
-            }
-          />
-        </Routes>
-        <Toaster />
-        <BackToTop />
+              }
+            />
+          </Routes>
+        </AuthProvider>
       </ErrorBoundary>
+      {/* Global toaster for compact notifications across the app */}
+      <Toaster position="top-center" richColors={false} closeButton={false} duration={1800} />
+      {/* Global back-to-top button */}
+      <BackToTop />
     </BrowserRouter>
   );
 }
