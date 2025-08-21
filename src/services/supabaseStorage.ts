@@ -1,23 +1,14 @@
 /**
  * Supabase Storage service (REST-based)
  * - Purpose: List and resolve public URLs for files in the single bucket "clinicalrxqfiles".
- * - Provides safe, flattened file items usable directly in UI.
+ * - Honors your exact folder structure from file_list.md (no extra roots).
+ * - Provides safe, flattened file items usable directly in UI (no objects rendered by mistake).
  */
 
 import { getSupabaseUrl, getSupabaseAnonKey } from '../config/supabaseConfig';
 
-/** Fixed bucket name */
+/** Fixed bucket name per user requirement (case-sensitive) */
 export const SUPABASE_BUCKET = 'clinicalrxqfiles';
-
-/** UI-facing file item shape */
-export interface StorageFileItem {
-  path: string;
-  title: string;
-  url: string;
-  filename: string;
-  mimeType?: string;
-  size?: number;
-}
 
 /** Minimal file object returned by REST list */
 interface SupaListObject {
@@ -26,6 +17,7 @@ interface SupaListObject {
   updated_at?: string;
   created_at?: string;
   last_accessed_at?: string;
+  // For files, metadata contains mimetype, size, etc. For folders, typically null/undefined.
   metadata?: {
     size?: number;
     mimetype?: string;
@@ -35,8 +27,24 @@ interface SupaListObject {
   } | null;
 }
 
+/** UI-facing file item shape */
+export interface StorageFileItem {
+  /** Full storage path relative to bucket, e.g., "mtmthefuturetoday/Forms/Adherence.pdf" */
+  path: string;
+  /** Filename only (no extension), preserving original name and casing except extension removed */
+  title: string;
+  /** Direct public URL */
+  url: string;
+  /** Raw filename including extension */
+  filename: string;
+  /** Optional mime type if known */
+  mimeType?: string;
+  /** Optional size if known */
+  size?: number;
+}
+
 /**
- * Remove only the last extension from a filename
+ * Remove only the last extension from a filename (preserve original name/casing).
  */
 export function stripOneExtension(filename: string): string {
   const lastDot = filename.lastIndexOf('.');
@@ -45,17 +53,19 @@ export function stripOneExtension(filename: string): string {
 }
 
 /**
- * Build a public URL for a stored object
+ * Build a public URL for a stored object.
  */
 export function buildPublicUrl(path: string): string {
   const base = getSupabaseUrl();
   if (!base) return '';
+  // Ensure no leading slashes in path
   const cleanPath = path.replace(/^\/+/, '');
   return `${base}/storage/v1/object/public/${SUPABASE_BUCKET}/${encodeURI(cleanPath)}`;
 }
 
 /**
  * Low-level REST list call to Supabase Storage
+ * - Non-recursive: returns direct contents under the given prefix.
  */
 export async function listPrefix(prefix: string, opts?: { limit?: number; offset?: number }): Promise<SupaListObject[]> {
   const base = getSupabaseUrl();
@@ -65,7 +75,7 @@ export async function listPrefix(prefix: string, opts?: { limit?: number; offset
   }
   const url = `${base}/storage/v1/object/list/${encodeURIComponent(SUPABASE_BUCKET)}`;
   const body = {
-    prefix: prefix.replace(/^\/+/, '').replace(/\/+$/, ''),
+    prefix: prefix.replace(/^\/+/, '').replace(/\/+$/, ''), // no leading/trailing slash
     limit: opts?.limit ?? 100,
     offset: opts?.offset ?? 0,
     sortBy: { column: 'name', order: 'asc' as const },
@@ -93,7 +103,9 @@ export async function listPrefix(prefix: string, opts?: { limit?: number; offset
 }
 
 /**
- * Recursively list files under a prefix
+ * Recursively list files under a prefix.
+ * - Detects subfolders via metadata === null (heuristic used by Supabase list).
+ * - Guards against infinite loops by tracking visited prefixes.
  */
 export async function listFilesDeep(prefix: string): Promise<StorageFileItem[]> {
   const visited = new Set<string>();
@@ -109,6 +121,7 @@ export async function listFilesDeep(prefix: string): Promise<StorageFileItem[]> 
       const name = row.name;
       const isFolder = !row.metadata || typeof row.metadata?.size !== 'number';
       if (isFolder) {
+        // Descend into subfolder
         await walk(`${key}/${name}`);
       } else {
         const path = `${key}/${name}`;
@@ -130,7 +143,7 @@ export async function listFilesDeep(prefix: string): Promise<StorageFileItem[]> 
 }
 
 /**
- * Try multiple candidate folder casings for a program category
+ * Try multiple candidate folder casings for a program category (e.g., "forms" and "Forms").
  */
 export async function listProgramCategory(programSlug: string, category: 'forms' | 'protocols' | 'resources' | 'training'): Promise<StorageFileItem[]> {
   const candidates = category === 'forms' ? ['forms', 'Forms'] : [category];
@@ -141,14 +154,14 @@ export async function listProgramCategory(programSlug: string, category: 'forms'
       const items = await listFilesDeep(prefix);
       out.push(...items);
     } catch {
-      // Ignore missing prefixes
+      // Ignore missing prefixes; continue
     }
   }
   return out;
 }
 
 /**
- * Global categories
+ * Global categories (top-level, per your structure).
  */
 export async function listGlobalHandouts(): Promise<StorageFileItem[]> {
   return listFilesDeep('patienthandouts');
@@ -163,7 +176,7 @@ export async function listGlobalBilling(): Promise<StorageFileItem[]> {
 }
 
 /**
- * List all resources for a given program across its 4 categories
+ * List all resources for a given program across its 4 categories.
  */
 export async function listAllForProgram(programSlug: string): Promise<{
   forms: StorageFileItem[];
