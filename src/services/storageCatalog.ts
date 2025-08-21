@@ -36,6 +36,20 @@ export type ProgramSlug = typeof ProgramSlugs[number];
 async function pgSelect<T>(pathAndQuery: string): Promise<T> {
   const base = getSupabaseUrl();
   const anon = getSupabaseAnonKey();
+   console.log('pgSelect debug:', { base, anon: anon ? 'PRESENT' : 'MISSING', pathAndQuery });
+  
+  if (!base) {
+    throw new Error('Supabase URL is not configured. Set VITE_SUPABASE_URL or localStorage SUPABASE_URL.');
+  }
+  const url = `${base}/rest/v1${pathAndQuery}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      apikey: anon,
+      Authorization: `Bearer ${anon}`,
+      Accept: 'application/json',
+    },
+  });
   if (!base) {
     throw new Error('Supabase URL is not configured. Set VITE_SUPABASE_URL or localStorage SUPABASE_URL.');
   }
