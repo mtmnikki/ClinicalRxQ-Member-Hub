@@ -249,45 +249,45 @@ export const resourceLibraryService = {
  * Auth/profile/bookmark/activity stubs (no SDK). We'll wire real auth next.
  */
 export const authService = {
-  /** Return a temporary mock profile so ProtectedRoute can pass during development */
   async getCurrentProfile(): Promise<Profile | null> {
-    // TODO: Implement real GoTrue endpoints (auth/v1) for full auth
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return null;
+    
     return {
-      id: 'mock-user',
-      email: 'member@example.com',
-      first_name: 'Clinical',
-      last_name: 'Member',
-      pharmacy_name: 'Demo Pharmacy',
-      subscription_status: 'Active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: user.id,
+      email: user.email || '',
+      first_name: user.user_metadata?.first_name || 'Member',
+      last_name: user.user_metadata?.last_name || '',
+      pharmacy_name: user.user_metadata?.pharmacy_name || '',
+      subscription_status: 'active',
+      created_at: user.created_at,
+      updated_at: user.updated_at || user.created_at,
     };
   },
 
-  /** No-op update (mock) */
-  async updateProfile(updates: Partial<Profile>): Promise<Profile> {
+  async signIn(email: string, password: string) {
+    const supabase = getSupabaseClient();
+    return await supabase.auth.signInWithPassword({ email, password });
+  },
+
+  async signOut() {
+    const supabase = getSupabaseClient();
+    return await supabase.auth.signOut();
+  },
+
+  async getSession() {
+    const supabase = getSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  },
+
+  // Keep other methods as simple stubs
+  async signUp() { return { user: null, session: null }; },
+  async updateProfile(updates: Partial<Profile>) { 
     const current = await this.getCurrentProfile();
     return { ...current!, ...updates };
-  },
-
-  /** Mock sign-up */
-  async signUp(email: string, _password: string, _metadata: Record<string, any>) {
-    return { user: { id: 'mock-user' }, session: null };
-  },
-
-  /** Mock sign-in */
-  async signIn(email: string, _password: string) {
-    return { user: { id: 'mock-user' }, session: null };
-  },
-
-  /** Mock sign-out */
-  async signOut() {
-    // no-op
-  },
-
-  /** Mock session getter */
-  async getSession() {
-    return null;
   },
 };
 
