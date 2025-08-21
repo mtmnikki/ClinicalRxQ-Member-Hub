@@ -169,7 +169,6 @@ export default function ProgramDetail() {
       <section className="relative -mx-3 bg-gradient-to-br from-blue-700 via-cyan-500 to-teal-300 px-3 py-10 text-white">
         {/* Remove max-width constraint to achieve full width between sidebar and viewport edge */}
         <div className="w-full">
-          <div className="max-w-4xl">
             <Breadcrumbs
               variant="light"
               items={[
