@@ -1,34 +1,3 @@
-/**
- * Public Home Page
- * This file renders the marketing homepage. Per request, the first three sections
- * (Hero, Advantage, Programs) are replaced to exactly match the provided code.
- * Remaining sections are preserved.
- */
-
-import React, { useState, useMemo } from 'react'
-import Header from '../components/layout/Header'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { Link } from 'react-router'
-import {
-  // Icons used in replaced sections
-  Play,
-  Users,
-  Clock,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  Target,
-  Zap,
-  Shield,
-  Award,/**
- * Public Home Page
- * This file renders the marketing homepage. Per request, the first three sections
- * (Hero, Advantage, Programs) are replaced to exactly match the provided code.
- * Remaining sections are preserved.
- */
-
 import React, { useState, useMemo } from 'react'
 import Header from '../components/layout/Header'
 import { Button } from '../components/ui/button'
