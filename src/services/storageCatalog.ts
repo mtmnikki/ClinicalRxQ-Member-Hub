@@ -36,10 +36,6 @@ export type ProgramSlug = typeof ProgramSlugs[number];
 async function pgSelect<T>(pathAndQuery: string): Promise<T> {
   const base = getSupabaseUrl();
   const anon = getSupabaseAnonKey();
-  
-  // TEMPORARY DEBUG - Remove after fixing
-  console.log('pgSelect debug:', { base, anon: anon ? 'PRESENT' : 'MISSING', pathAndQuery });
-  
   if (!base) {
     throw new Error('Supabase URL is not configured. Set VITE_SUPABASE_URL or localStorage SUPABASE_URL.');
   }
@@ -149,80 +145,6 @@ async function catalogProgramCategory(
 }
 
 /**
- * Program list item for UI display
- */
-export interface ProgramListItem {
-  slug: ProgramSlug;
-  name: string;
-  description: string;
-  hasTraining: boolean;
-  hasProtocols: boolean;
-  hasForms: boolean;
-  hasResources: boolean;
-}
-
-/** Program metadata from site mapping */
-export const ProgramMetadata: Record<ProgramSlug, {
-  name: string;
-  description: string;
-  hasTraining: boolean;
-  hasProtocols: boolean;
-  hasForms: boolean;
-  hasResources: boolean;
-}> = {
-  mtmthefuturetoday: {
-    name: 'MTM The Future Today',
-    description: 'Comprehensive medication therapy management training with TIP protocols and CMR workflows',
-    hasTraining: true,
-    hasProtocols: true,
-    hasForms: true,
-    hasResources: true,
-  },
-  timemymeds: {
-    name: 'TimeMyMeds (MedSync)',
-    description: 'Medication synchronization program for improved patient adherence',
-    hasTraining: true,
-    hasProtocols: true,
-    hasForms: true,
-    hasResources: false,
-  },
-  testandtreat: {
-    name: 'Test & Treat Services',
-    description: 'Point-of-care testing and treatment for Strep, Flu, and COVID-19',
-    hasTraining: true,
-    hasProtocols: true,
-    hasForms: true,
-    hasResources: false,
-  },
-  hba1c: {
-    name: 'HbA1c Testing',
-    description: 'Hemoglobin A1c testing protocols and billing procedures',
-    hasTraining: false,
-    hasProtocols: true,
-    hasForms: false,
-    hasResources: true,
-  },
-  oralcontraceptives: {
-    name: 'Oral Contraceptives',
-    description: 'Comprehensive oral contraceptive prescribing and patient care program',
-    hasTraining: true,
-    hasProtocols: false,
-    hasForms: true,
-    hasResources: true,
-  },
-};
-
-/**
- * List all programs with metadata
- */
-export async function listProgramsFromStorage(): Promise<ProgramListItem[]> {
-  return ProgramSlugs.map(slug => ({
-    slug,
-    ...ProgramMetadata[slug],
-  }));
-}
-
-/**
  * Aggregate set for "All resources"
  * - Lightweight union of global sets + optionally a single selected program to keep things performant.
  * - Prefers DB catalog; falls back to storage listing if DB unavailable.
@@ -294,22 +216,80 @@ export async function getGlobalCategory(cat: 'handouts' | 'guidelines' | 'billin
  * Get all resources for a program, grouped.
  * - Prefers DB catalog; falls back to storage listing.
  */
-export async function getProgramResourcesGrouped(programSlug: ProgramSlug): Promise<{
-  training: StorageFileItem[];
-  protocols: StorageFileItem[];
+export async function getProgramResourcesGrouped(slug: ProgramSlug): Promise<{
   forms: StorageFileItem[];
+  protocols: StorageFileItem[];
   resources: StorageFileItem[];
+  training: StorageFileItem[];
 }> {
   try {
-    const [training, protocols, forms, resources] = await Promise.all([
-      catalogProgramCategory(programSlug, 'training'),
-      catalogProgramCategory(programSlug, 'protocols'),
-      catalogProgramCategory(programSlug, 'forms'),
-      catalogProgramCategory(programSlug, 'resources'),
+    const [forms, protocols, resources, training] = await Promise.all([
+      catalogProgramCategory(slug, 'forms'),
+      catalogProgramCategory(slug, 'protocols'),
+      catalogProgramCategory(slug, 'resources'),
+      catalogProgramCategory(slug, 'training'),
     ]);
-    return { training, protocols, forms, resources };
+    return { forms, protocols, resources, training };
   } catch {
-    const { forms, protocols, resources, training } = await listAllForProgram(programSlug);
-    return { training, protocols, forms, resources };
+    return listAllForProgram(slug);
   }
+}
+
+/**
+ * Program list items for the Programs page.
+ * - Purpose: Provide a friendly list of available programs with stable slugs used by ProgramDetail.
+ * - Implementation: Derived from ProgramSlugs (no network call). Friendly names/descriptions are curated.
+ */
+export interface ProgramListItem {
+  /** Folder slug that matches Supabase Storage and ProgramDetail route */
+  slug: ProgramSlug;
+  /** Human-readable program name */
+  name: string;
+  /** Optional short description */
+  description?: string | null;
+}
+
+/** Friendly metadata for each program slug */
+const ProgramMeta: Record<
+  ProgramSlug,
+  { name: string; description?: string }
+> = {
+  mtmthefuturetoday: {
+    name: 'MTM The Future Today',
+    description:
+      'Team-based Medication Therapy Management program with proven protocols and scalable results.',
+  },
+  timemymeds: {
+    name: 'TimeMyMeds',
+    description: 'Appointment-based synchronization to enable consistent clinical service delivery.',
+  },
+  testandtreat: {
+    name: 'Test & Treat Services',
+    description: 'Patient assessments, CLIA-waived testing, and treatment guidance for flu, strep, and COVID-19.',
+  },
+  hba1c: {
+    name: 'HbA1c Testing',
+    description: 'Training and resources for A1c point-of-care testing and quality metrics.',
+  },
+  oralcontraceptives: {
+    name: 'Pharmacist-Initiated Oral Contraceptives',
+    description:
+      'From patient intake to billing and documentation—simplified, step-by-step service workflows.',
+  },
+};
+
+/**
+ * List available programs.
+ * - Returns friendly name + description with correct slug used by ProgramDetail and Storage.
+ */
+export async function listProgramsFromStorage(): Promise<ProgramListItem[]> {
+  // Static list for now; replace with Supabase query if you add a "programs" table later.
+  return ProgramSlugs.map((slug) => {
+    const meta = ProgramMeta[slug];
+    return {
+      slug,
+      name: meta?.name ?? slug,
+      description: meta?.description ?? 'Open to view training modules and resources.',
+    };
+  });
 }
